@@ -1,5 +1,5 @@
 import React from "react";
-import { Star, Clock, BookOpen, User, GraduationCap } from "lucide-react";
+import { Star, Clock, BookOpen, User, GraduationCap, Share2, Check } from "lucide-react";
 import { Course, Language } from "../types";
 import { TRANSLATIONS } from "../data";
 
@@ -22,9 +22,53 @@ export default function CourseCard({
   onViewInstructor,
 }: CourseCardProps) {
   const t = TRANSLATIONS[language];
+  const [copied, setCopied] = React.useState(false);
 
   const title = language === "en" ? course.titleEn : course.titleKh;
   const desc = language === "en" ? course.descriptionEn : course.descriptionKh;
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}?course=${course.id}`;
+    const shareText = language === "en"
+      ? `Check out this course: ${title}`
+      : `សូមមើលវគ្គសិក្សានេះ៖ ${title}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (_) {
+      const textarea = document.createElement("textarea");
+      textarea.value = shareUrl;
+      textarea.style.position = "absolute";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (e) {
+        console.error("Copy failed", e);
+      }
+      document.body.removeChild(textarea);
+    }
+  };
   const level = language === "en" ? course.levelEn : course.levelKh;
   const instructorTitle = language === "en" ? course.instructorTitleEn : course.instructorTitleKh;
   const tag = language === "en" ? course.tagEn : course.tagKh;
@@ -70,6 +114,37 @@ export default function CourseCard({
             </span>
           </div>
         )}
+
+        {/* Share Button Overlay */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleShare();
+          }}
+          className={`absolute right-4 bottom-4 z-10 p-2 rounded-xl border transition-all duration-300 shadow-lg cursor-pointer flex items-center gap-1.5 backdrop-blur-md h-8 ${
+            copied
+              ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-300 scale-105"
+              : "bg-slate-900/65 hover:bg-indigo-500/20 hover:border-indigo-400/40 border-white/10 text-slate-300 hover:text-indigo-200 hover:scale-105 active:scale-95"
+          }`}
+          title={language === "en" ? "Share Course" : "ចែករំលែកវគ្គសិក្សា"}
+          id={`share-btn-${course.id}`}
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-emerald-300" />
+              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
+                {language === "en" ? "Copied" : "បានចម្លង"}
+              </span>
+            </>
+          ) : (
+            <>
+              <Share2 className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
+                {language === "en" ? "Share" : "ចែករំលែក"}
+              </span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Course Core Details */}
