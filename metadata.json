@@ -1,0 +1,6 @@
+{
+  "name": "Online Learning Platform",
+  "description": "A premium glassmorphic online learning platform with a video learning interface, responsive layout, student analytics dashboard, dark mode, and Khmer language support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
